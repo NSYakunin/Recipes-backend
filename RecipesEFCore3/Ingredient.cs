@@ -11,7 +11,5 @@ namespace RecipesEFCore3
         public int IngredientId { get; set; }
         public int RecipeID { get; set; }
         public required string Name { get; set; }
-        public decimal Qiantity { get; set; }
-        public required string Unit { get; set; }
     }
 }
