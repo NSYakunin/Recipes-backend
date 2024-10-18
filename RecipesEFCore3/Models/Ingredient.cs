@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RecipesEFCore3
+namespace RecipesEFCore3.Models
 {
     public class Ingredient
     {

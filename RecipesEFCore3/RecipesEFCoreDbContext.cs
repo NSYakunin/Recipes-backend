@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using RecipesEFCore3;
+using RecipesEFCore3.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;

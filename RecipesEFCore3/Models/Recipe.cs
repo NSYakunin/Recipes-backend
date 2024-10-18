@@ -1,4 +1,4 @@
-﻿namespace RecipesEFCore3
+﻿namespace RecipesEFCore3.Models
 {
     public class Recipe
     {

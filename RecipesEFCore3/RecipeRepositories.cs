@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RecipesEFCore.DataAccess.SQLServer;
+using RecipesEFCore3.Models;
 using System;
 
 namespace RecipesEFCore3;
