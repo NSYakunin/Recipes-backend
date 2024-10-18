@@ -7,6 +7,8 @@
         public TimeSpan TimeToCook { get; set; }
         public bool IsDeleted { get; set; }
         public required string Method { get; set; }
+        public bool IsVegetarian { get; set; }
+        public bool IsVegan { get; set; }
         public required ICollection<Ingredient> ingredients { get; set; }
     }
 }

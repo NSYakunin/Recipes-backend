@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RecipesEFCore.DataAccess.SQLServer;
 
@@ -11,9 +12,11 @@ using RecipesEFCore.DataAccess.SQLServer;
 namespace RecipesEFCore3.Migrations
 {
     [DbContext(typeof(RecipesEFCoreDbContext))]
-    partial class RecipesEFCoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241018073938_ExrtraReci")]
+    partial class ExrtraReci
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
