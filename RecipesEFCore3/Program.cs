@@ -12,6 +12,9 @@ using RecipesEFCore3.Services;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 
 var connString = builder.Configuration.GetConnectionString("Data");
 
@@ -22,6 +25,8 @@ builder.Services.AddAutoMapper(typeof(Program));
 var app = builder.Build();
 
 app.UseExceptionHandler();
+app.UseSwagger();
+app.UseSwaggerUI();
 
 
 app.MapRecipeEndpoints();
