@@ -51,10 +51,22 @@ namespace RecipesEFCore3.Endpoints
                 await dbContext.Recipes.AddAsync(recipe);
                 await dbContext.SaveChangesAsync();
 
-                // После сохранения рецепта
-                var recipeResponseDto = mapper.Map<RecipeResponseDto>(recipe);
+                // Формируем ответ с помощью DTO
+                var recipeResponseDto = new RecipeResponseDto
+                {
+                    RecipeID = recipe.RecipeID,
+                    Name = recipe.Name,
+                    IsVegetarian = recipe.IsVegetarian,
+                    IsVegan = recipe.IsVegan,
+                    Ingredients = recipe.RecipeIngredients.Select(ri => new IngredientDto
+                    {
+                        Name = ri.Ingredient.Name,
+                        Quantity = ri.Quantity,
+                        Unit = ri.Unit
+                    }).ToList()
+                };
 
-                return Results.Created($"/recipes/{recipe.RecipeID}", recipe);
+                return Results.Created($"/recipes/{recipe.RecipeID}", recipeResponseDto);
             });
             }
 

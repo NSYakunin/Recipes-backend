@@ -11,6 +11,4 @@ public class RecipeDto
 
     [Required]
     public ICollection<IngredientDto> Ingredients { get; set; } // Список ингредиентов
-
-    public ICollection<RecipeIngredient>? RecipeIngredients { get; set; } = new List<RecipeIngredient>();
 }
