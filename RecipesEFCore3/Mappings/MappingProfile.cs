@@ -8,8 +8,11 @@ namespace RecipesEFCore3.Mappings
     {
         public MappingProfile()
         {
-            CreateMap<RecipeDto, Recipe>();
-            CreateMap<IngredientDto, Ingredient>();
+            CreateMap<RecipeDto, Recipe>()
+                .ForMember(dest => dest.Ingredients, opt => opt.Ignore());
+
+            CreateMap<IngredientDto, Ingredient>()
+                .ForMember(dest => dest.IngredientId, opt => opt.Ignore());
         }
     }
 }

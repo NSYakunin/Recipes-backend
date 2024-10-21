@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RecipesEFCore.DataAccess.SQLServer;
 
@@ -10,9 +11,11 @@ using RecipesEFCore.DataAccess.SQLServer;
 namespace RecipesEFCore3.Migrations
 {
     [DbContext(typeof(RecipesEFCoreDbContext))]
-    partial class RecipesEFCoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241021055424_UpdateRecipeIngredientRelationship2")]
+    partial class UpdateRecipeIngredientRelationship2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

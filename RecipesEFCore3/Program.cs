@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+//builder.Services.AddSwaggerGen();
 
 
 var connString = builder.Configuration.GetConnectionString("Data");
@@ -23,12 +23,14 @@ builder.Services.AddProblemDetails();
 builder.Services.AddScoped<IRecipeService, RecipeService>();
 builder.Services.AddAutoMapper(typeof(Program));
 var app = builder.Build();
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
 
 app.UseExceptionHandler();
-app.UseSwagger();
-app.UseSwaggerUI();
-
-
+//app.UseSwagger();
+//app.UseSwaggerUI();
 app.MapRecipeEndpoints();
 
 app.Run();
