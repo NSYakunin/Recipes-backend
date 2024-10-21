@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddEndpointsApiExplorer();
-//builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen();
 
 
 var connString = builder.Configuration.GetConnectionString("Data");
@@ -32,8 +32,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseExceptionHandler();
-//app.UseSwagger();
-//app.UseSwaggerUI();
+app.UseSwagger();
+app.UseSwaggerUI();
 app.MapRecipeEndpoints();
 
 app.Run();

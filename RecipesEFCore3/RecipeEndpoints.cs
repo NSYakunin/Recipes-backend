@@ -25,31 +25,28 @@ namespace RecipesEFCore3.Endpoints
                 // Маппинг RecipeDto на Recipe (без ингредиентов)
                 var recipe = mapper.Map<Recipe>(recipeDto);
 
-                // Обработка ингредиентов
-                var ingredientNames = recipeDto.Ingredients.Select(i => i.Name.Trim().ToLower()).Distinct().ToList();
-
-                // Проверяем, какие ингредиенты уже существуют
-                var existingIngredients = await dbContext.Ingredients
-                    .Where(i => ingredientNames.Contains(i.Name.ToLower()))
-                    .ToListAsync();
-
-                // Определяем, какие ингредиенты из нашего списка отсутствуют в базе данных, и создаём объекты для них
-                //ingredientNames.Except(...) — находим имена ингредиентов, которые есть в ingredientNames, но отсутствуют среди existingIngredients
-                var newIngredientNames = ingredientNames.Except(existingIngredients.Select(i => i.Name.ToLower())).ToList();
-                var newIngredients = newIngredientNames.Select(name => new Ingredient { Name = name }).ToList();
-
-                // Если есть новые ингредиенты, добавляем их в базу данных.
-                if (newIngredients.Any())
+                foreach (var ingredientDto in recipeDto.Ingredients)
                 {
-                    await dbContext.Ingredients.AddRangeAsync(newIngredients);
-                    await dbContext.SaveChangesAsync();
+                    // Проверяем, существует ли ингредиент в базе данных
+                    var ingredient = await dbContext.Ingredients
+                        .FirstOrDefaultAsync(i => i.Name == ingredientDto.Name);
+
+                    if (ingredient == null)
+                    {
+                        // Если ингредиент не существует, создаём новый
+                        ingredient = new Ingredient { Name = ingredientDto.Name };
+                        dbContext.Ingredients.Add(ingredient);
+                        await dbContext.SaveChangesAsync();
+                    }
+
+                    // Добавляем связь в RecipeIngredients
+                    recipe.RecipeIngredients.Add(new RecipeIngredient
+                    {
+                        IngredientId = ingredient.IngredientId,
+                        Quantity = ingredientDto.Quantity,
+                        Unit = ingredientDto.Unit
+                    });
                 }
-
-                // Объединяем существующие и новые ингредиенты
-                var allIngredients = existingIngredients.Concat(newIngredients).ToList();
-
-                // Связываем ингредиенты с рецептом
-                recipe.Ingredients = allIngredients;
 
                 await dbContext.Recipes.AddAsync(recipe);
                 await dbContext.SaveChangesAsync();
@@ -57,7 +54,7 @@ namespace RecipesEFCore3.Endpoints
                 // После сохранения рецепта
                 var recipeResponseDto = mapper.Map<RecipeResponseDto>(recipe);
 
-                return Results.Created($"/recipes/{recipe.RecipeID}", recipeResponseDto);
+                return Results.Created($"/recipes/{recipe.RecipeID}", recipe);
             });
             }
 
@@ -65,6 +62,7 @@ namespace RecipesEFCore3.Endpoints
         {
             var context = new ValidationContext(model, serviceProvider: null, items: null);
             results = new List<ValidationResult>();
+
             return Validator.TryValidateObject(model, context, results, validateAllProperties: true);
         }
 
