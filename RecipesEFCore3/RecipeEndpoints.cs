@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniValidation;
 using RecipesEFCore.DataAccess.SQLServer;
-using RecipesEFCore3.DTOs;
 using RecipesEFCore3.Models;
 using RecipesEFCore3.Services;
 using System;
@@ -55,11 +54,14 @@ namespace RecipesEFCore3.Endpoints
                 await dbContext.Recipes.AddAsync(recipe);
                 await dbContext.SaveChangesAsync();
 
-                return Results.Created($"/recipes/{recipe.RecipeID}", recipe);
+                // После сохранения рецепта
+                var recipeResponseDto = mapper.Map<RecipeResponseDto>(recipe);
+
+                return Results.Created($"/recipes/{recipe.RecipeID}", recipeResponseDto);
             });
             }
 
-        public static bool TryValidateModel(object model, out List<ValidationResult> results)
+        private static bool TryValidateModel(object model, out List<ValidationResult> results)
         {
             var context = new ValidationContext(model, serviceProvider: null, items: null);
             results = new List<ValidationResult>();

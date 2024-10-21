@@ -1,4 +1,5 @@
-﻿using RecipesEFCore3.DTOs;
+﻿
+using RecipesEFCore3.Models;
 using System.ComponentModel.DataAnnotations;
 
 public class RecipeDto
@@ -10,4 +11,6 @@ public class RecipeDto
 
     [Required]
     public ICollection<IngredientDto> Ingredients { get; set; } // Список ингредиентов
+
+    public ICollection<RecipeIngredient>? RecipeIngredients { get; set; } = new List<RecipeIngredient>();
 }
