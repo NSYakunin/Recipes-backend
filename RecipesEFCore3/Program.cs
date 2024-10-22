@@ -1,13 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RecipesEFCore.DataAccess.SQLServer;
-using RecipesEFCore3;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel;
-using System;
-using RecipesEFCore3.Models;
 using RecipesEFCore3.Endpoints;
 using RecipesEFCore3.Services;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();

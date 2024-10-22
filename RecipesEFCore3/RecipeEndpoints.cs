@@ -20,7 +20,11 @@ namespace RecipesEFCore3.Endpoints
                 await CreateRecipe(dbContext, mapper, recipeDto);
             });
 
-            app.MapGet("/recipes/", () => GetRecipeById());
+            app.MapGet("/recipes", async (RecipesEFCoreDbContext dbContext, IMapper mapper) => await GetRecipeList(dbContext, mapper));
+
+            app.MapGet("/recipes/{id}", async (RecipesEFCoreDbContext dbContext, IMapper mapper, int id) => await GetRecipeById(dbContext, mapper, id));
+
+            app.MapGet("/recipes/search", async (RecipesEFCoreDbContext dbContext, IMapper mapper, string query) => await GetRecipeFilter(dbContext, mapper, query));
         }
 
         private static bool TryValidateModel(object model, out List<ValidationResult> results)
@@ -33,7 +37,6 @@ namespace RecipesEFCore3.Endpoints
 
         private static async Task<IResult> CreateRecipe(RecipesEFCoreDbContext dbContext, IMapper mapper, RecipeDto recipeDto)
         {
-
             // Валидация входных данных
             if (!TryValidateModel(recipeDto, out var errors))
             {
@@ -88,11 +91,45 @@ namespace RecipesEFCore3.Endpoints
         }
 
 
-        private static async Task<IResult> GetRecipeById()
+        private static async Task<IResult> GetRecipeList(RecipesEFCoreDbContext dbContext, IMapper mapper)
         {
-            return Results.Redirect("https://www.google.com/search?q=%D1%85%D1%80%D0%B5%D0%BD&sca_esv=0ba5b4315e0bd468&sxsrf=ADLYWIJO25UAR0FIwEJLN_yMEMom3OEtvw%3A1729509985339&source=hp&ei=YToWZ92VEb65wPAP3PaVwQ0&iflsig=AL9hbdgAAAAAZxZIcc1NPOcslAx1hX0DJmP0jGjaAAxc&gs_ssp=eJzj4tDP1TdITsnOMWD04rjYerHhwtYLewFKAQjo&oq=%D0%A5%D1%80%D0%B5%D0%BD&gs_lp=Egdnd3Mtd2l6IgjQpdGA0LXQvSoCCAEyBRAAGIAEMg4QLhiABBixAxiDARjUAjIIEC4YgAQYsQMyCBAAGIAEGLEDMggQABiABBixAzIFEAAYgAQyBRAAGIAEMggQLhiABBixAzILEC4YgAQYxwEYrwEyBRAAGIAESIAgUOwLWNcQcAF4AJABAJgBnQGgAb4DqgEDMi4yuAEByAEA-AEBmAIFoALRA6gCCsICBxAjGCcY6gLCAgsQABiABBixAxiDAcICDhAAGIAEGLEDGIMBGIoFwgIFEC4YgATCAg4QLhiABBixAxiDARiKBcICCxAuGIAEGLEDGIMBmAMHkgcDMy4yoAevOw&sclient=gws-wiz");
-            // Логика получения рецепта по ID
+            var recipes = await dbContext.Recipes
+                    .Include(r => r.RecipeIngredients)
+                        .ThenInclude(ri => ri.Ingredient)
+                    .ToListAsync();
+
+            var recipeResponseDtos = mapper.Map<List<RecipeResponseDto>>(recipes);
+            return Results.Ok(recipeResponseDtos);
         }
+
+        private static async Task<IResult> GetRecipeById(RecipesEFCoreDbContext dbContext, IMapper mapper, int id)
+        {
+            var recipes = await dbContext.Recipes
+                .Include(r => r.RecipeIngredients)
+                    .ThenInclude(ri => ri.Ingredient)
+                .FirstOrDefaultAsync(r => r.RecipeID == id);
+
+            if (recipes == null)
+            {
+                return Results.NotFound();
+            }
+
+            var recipeResponseDto = mapper.Map<RecipeResponseDto>(recipes);
+            return Results.Ok(recipeResponseDto);
+        }
+
+        private static async Task<IResult> GetRecipeFilter(RecipesEFCoreDbContext dbContext, IMapper mapper, string query)
+        {
+            var recipes = await dbContext.Recipes
+                .Include(r => r.RecipeIngredients)
+                    .ThenInclude(ri => ri.Ingredient)
+                .Where(r => r.Name.ToLower().Contains(query.ToLower()) || r.RecipeIngredients.Any(ri => ri.Ingredient.Name.ToLower().Contains(query.ToLower())))
+                .ToListAsync();
+
+            var recipeResponseDto = mapper.Map<List<RecipeResponseDto>>(recipes);
+            return Results.Ok(recipeResponseDto);
+        }
+
 
         //private static async Task<IResult> UpdateRecipe(RecipesEFCoreDbContext dbContext, int id, RecipeDto recipeDto)
         //{
