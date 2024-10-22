@@ -9,18 +9,33 @@ public class RecipeService : IRecipeService
     private readonly RecipesEFCoreDbContext _dbContext;
     private readonly IMapper _mapper;
 
-    public RecipeService(RecipesEFCoreDbContext dbContext, IMapper mapper)
+    public Task CreateRecipeAsync(RecipeDto recipeDto)
     {
-        _dbContext = dbContext;
-        _mapper = mapper;
+        throw new NotImplementedException();
     }
 
-    public async Task<Recipe> CreateRecipeAsync(RecipeDto recipeDto)
+    public Task DeleteRecipeAsync(int id)
     {
+        throw new NotImplementedException();
+    }
 
-        var recipe = _mapper.Map<Recipe>(recipeDto);
-        await _dbContext.Recipes.AddAsync(recipe);
-        await _dbContext.SaveChangesAsync();
-        return recipe;
+    public Task<RecipeResponseDto> GetRecipeByIdAsync(int id)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<RecipeResponseDto>> GetRecipesAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<RecipeResponseDto>> SearchRecipesAsync(string query)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task UpdateRecipeAsync(int id, RecipeDto recipeDto)
+    {
+        throw new NotImplementedException();
     }
 }

@@ -25,6 +25,13 @@ namespace RecipesEFCore3.Endpoints
             app.MapGet("/recipes/{id}", async (RecipesEFCoreDbContext dbContext, IMapper mapper, int id) => await GetRecipeById(dbContext, mapper, id));
 
             app.MapGet("/recipes/search", async (RecipesEFCoreDbContext dbContext, IMapper mapper, string query) => await GetRecipeFilter(dbContext, mapper, query));
+
+            app.MapPut("/recipes/{id}", async (RecipesEFCoreDbContext dbContext, IMapper mapper, int id, RecipeDto recipeDto) =>
+            {
+                var result = await UpdateRecipe(dbContext, mapper, id, recipeDto);
+                return result;
+            });
+
         }
 
         private static bool TryValidateModel(object model, out List<ValidationResult> results)
@@ -131,14 +138,74 @@ namespace RecipesEFCore3.Endpoints
         }
 
 
-        //private static async Task<IResult> UpdateRecipe(RecipesEFCoreDbContext dbContext, int id, RecipeDto recipeDto)
-        //{
-        //    // Логика обновления рецепта
-        //}
+        private static async Task<IResult> UpdateRecipe(RecipesEFCoreDbContext dbContext, IMapper mapper, int id, RecipeDto recipeDto)
+        {
+            // Поиск рецепта в базе данных
+            var recipe = await dbContext.Recipes
+                .Include(r => r.RecipeIngredients)
+                .ThenInclude(ri => ri.Ingredient)
+                .FirstOrDefaultAsync(r => r.RecipeID == id);
 
-        //private static async Task<IResult> DeleteRecipe(RecipesEFCoreDbContext dbContext, int id)
-        //{
-        //    // Логика удаления рецепта
-        //}
+            if (recipe == null)
+            {
+                return Results.NotFound();
+            }
+
+            // Маппинг RecipeDto на существующий Recipe (без ингредиентов)
+            mapper.Map(recipeDto, recipe);
+
+            // Удаляем старые связи между рецептом и ингредиентами
+            dbContext.RecipeIngredients.RemoveRange(recipe.RecipeIngredients);
+
+            // Добавляем новые связи из DTO
+            foreach (var ingredientDto in recipeDto.Ingredients)
+            {
+                // Проверяем, существует ли ингредиент в базе данных
+                var ingredient = await dbContext.Ingredients
+                    .FirstOrDefaultAsync(i => i.Name == ingredientDto.Name);
+
+                if (ingredient == null)
+                {
+                    // Если ингредиент не существует, создаём новый
+                    ingredient = new Ingredient { Name = ingredientDto.Name };
+                    dbContext.Ingredients.Add(ingredient);
+                    await dbContext.SaveChangesAsync();
+                }
+
+                // Добавляем новую связь в RecipeIngredients
+                recipe.RecipeIngredients.Add(new RecipeIngredient
+                {
+                    IngredientId = ingredient.IngredientId,
+                    Quantity = ingredientDto.Quantity,
+                    Unit = ingredientDto.Unit
+                });
+            }
+
+            await dbContext.SaveChangesAsync();
+
+            return Results.Ok();
+        }
+
+        private static async Task<IResult> DeleteRecipe(RecipesEFCoreDbContext dbContext, int id)
+        {
+            var recipe = await dbContext.Recipes
+                .Include(r => r.RecipeIngredients)
+                .FirstOrDefaultAsync(r => r.RecipeID == id);
+
+            if (recipe == null)
+            {
+                return Results.NotFound();
+            }
+
+            // Удаляем все связи ингредиентов с рецептом
+            dbContext.RecipeIngredients.RemoveRange(recipe.RecipeIngredients);
+
+            // Удаляем сам рецепт
+            dbContext.Recipes.Remove(recipe);
+
+            await dbContext.SaveChangesAsync();
+
+            return Results.Ok();
+        }
     }
 }
