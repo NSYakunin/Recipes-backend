@@ -5,11 +5,11 @@ namespace RecipesEFCore3.Services
 {
     public interface IRecipeService
     {
-        Task CreateRecipeAsync(RecipeDto recipeDto);
-        Task<List<RecipeResponseDto>> GetRecipesAsync();
-        Task<RecipeResponseDto> GetRecipeByIdAsync(int id);
-        Task<List<RecipeResponseDto>> SearchRecipesAsync(string query);
-        Task UpdateRecipeAsync(int id, RecipeDto recipeDto);
-        Task DeleteRecipeAsync(int id);
+        Task<IResult> CreateRecipeAsync(RecipeDto recipeDto);
+        Task<IResult> GetRecipesAsync();
+        Task<IResult> GetRecipeByIdAsync(int id);
+        Task<IResult> SearchRecipesAsync(string query);
+        Task<IResult> UpdateRecipeAsync(int id, RecipeDto recipeDto);
+        Task<IResult> DeleteRecipeAsync(int id);
     }
 }

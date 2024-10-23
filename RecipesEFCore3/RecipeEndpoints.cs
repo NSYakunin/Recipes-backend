@@ -15,197 +15,190 @@ namespace RecipesEFCore3.Endpoints
     {
         public static void MapRecipeEndpoints(this WebApplication app)
         {
-            app.MapPost("/recipes", async (RecipesEFCoreDbContext dbContext, IMapper mapper, RecipeDto recipeDto) =>
-            {
-                await CreateRecipe(dbContext, mapper, recipeDto);
-            });
+            app.MapPost("/recipes", async (IRecipeService recipeService, RecipeDto recipeDto) => await recipeService.CreateRecipeAsync(recipeDto));
 
-            app.MapGet("/recipes", async (RecipesEFCoreDbContext dbContext, IMapper mapper) => await GetRecipeList(dbContext, mapper));
+            app.MapGet("/recipes", async (IRecipeService recipeService) => await recipeService.GetRecipesAsync());
 
-            app.MapGet("/recipes/{id}", async (RecipesEFCoreDbContext dbContext, IMapper mapper, int id) => await GetRecipeById(dbContext, mapper, id));
+            app.MapGet("/recipes/{id}", async (IRecipeService recipeService, int id) => await recipeService.GetRecipeByIdAsync(id));
 
-            app.MapGet("/recipes/search", async (RecipesEFCoreDbContext dbContext, IMapper mapper, string query) => await GetRecipeFilter(dbContext, mapper, query));
+            app.MapGet("/recipes/search", async (IRecipeService recipeService, string query) => await recipeService.SearchRecipesAsync(query));
 
-            app.MapPut("/recipes/{id}", async (RecipesEFCoreDbContext dbContext, IMapper mapper, int id, RecipeDto recipeDto) =>
-            {
-                var result = await UpdateRecipe(dbContext, mapper, id, recipeDto);
-                return result;
-            });
+            app.MapPut("/recipes/{id}", async (IRecipeService recipeService, int id, RecipeDto recipeDto) => await recipeService.UpdateRecipeAsync(id, recipeDto));
 
         }
 
-        private static bool TryValidateModel(object model, out List<ValidationResult> results)
-        {
-            var context = new ValidationContext(model, serviceProvider: null, items: null);
-            results = new List<ValidationResult>();
+        //private static bool TryValidateModel(object model, out List<ValidationResult> results)
+        //{
+        //    var context = new ValidationContext(model, serviceProvider: null, items: null);
+        //    results = new List<ValidationResult>();
 
-            return Validator.TryValidateObject(model, context, results, validateAllProperties: true);
-        }
+        //    return Validator.TryValidateObject(model, context, results, validateAllProperties: true);
+        //}
 
-        private static async Task<IResult> CreateRecipe(RecipesEFCoreDbContext dbContext, IMapper mapper, RecipeDto recipeDto)
-        {
-            // Валидация входных данных
-            if (!TryValidateModel(recipeDto, out var errors))
-            {
-                return Results.BadRequest(errors);
-            }
+        //private static async Task<IResult> CreateRecipe(RecipesEFCoreDbContext dbContext, IMapper mapper, RecipeDto recipeDto)
+        //{
+        //    // Валидация входных данных
+        //    if (!TryValidateModel(recipeDto, out var errors))
+        //    {
+        //        return Results.BadRequest(errors);
+        //    }
 
-            // Маппинг RecipeDto на Recipe (без ингредиентов)
-            var recipe = mapper.Map<Recipe>(recipeDto);
+        //    // Маппинг RecipeDto на Recipe (без ингредиентов)
+        //    var recipe = mapper.Map<Recipe>(recipeDto);
 
-            foreach (var ingredientDto in recipeDto.Ingredients)
-            {
-                // Проверяем, существует ли ингредиент в базе данных
-                var ingredient = await dbContext.Ingredients
-                    .FirstOrDefaultAsync(i => i.Name == ingredientDto.Name);
+        //    foreach (var ingredientDto in recipeDto.Ingredients)
+        //    {
+        //        // Проверяем, существует ли ингредиент в базе данных
+        //        var ingredient = await dbContext.Ingredients
+        //            .FirstOrDefaultAsync(i => i.Name == ingredientDto.Name);
 
-                if (ingredient == null)
-                {
-                    // Если ингредиент не существует, создаём новый
-                    ingredient = new Ingredient { Name = ingredientDto.Name };
-                    dbContext.Ingredients.Add(ingredient);
-                    await dbContext.SaveChangesAsync();
-                }
+        //        if (ingredient == null)
+        //        {
+        //            // Если ингредиент не существует, создаём новый
+        //            ingredient = new Ingredient { Name = ingredientDto.Name };
+        //            dbContext.Ingredients.Add(ingredient);
+        //            await dbContext.SaveChangesAsync();
+        //        }
 
-                // Добавляем связь в RecipeIngredients
-                recipe.RecipeIngredients.Add(new RecipeIngredient
-                {
-                    IngredientId = ingredient.IngredientId,
-                    Quantity = ingredientDto.Quantity,
-                    Unit = ingredientDto.Unit
-                });
-            }
+        //        // Добавляем связь в RecipeIngredients
+        //        recipe.RecipeIngredients.Add(new RecipeIngredient
+        //        {
+        //            IngredientId = ingredient.IngredientId,
+        //            Quantity = ingredientDto.Quantity,
+        //            Unit = ingredientDto.Unit
+        //        });
+        //    }
 
-            await dbContext.Recipes.AddAsync(recipe);
-            await dbContext.SaveChangesAsync();
+        //    await dbContext.Recipes.AddAsync(recipe);
+        //    await dbContext.SaveChangesAsync();
 
-            // Формируем ответ с помощью DTO
-            var recipeResponseDto = new RecipeResponseDto
-            {
-                RecipeID = recipe.RecipeID,
-                Name = recipe.Name,
-                IsVegetarian = recipe.IsVegetarian,
-                IsVegan = recipe.IsVegan,
-                Ingredients = recipe.RecipeIngredients.Select(ri => new IngredientDto
-                {
-                    Name = ri.Ingredient.Name,
-                    Quantity = ri.Quantity,
-                    Unit = ri.Unit
-                }).ToList()
-            };
+        //    // Формируем ответ с помощью DTO
+        //    var recipeResponseDto = new RecipeResponseDto
+        //    {
+        //        RecipeID = recipe.RecipeID,
+        //        Name = recipe.Name,
+        //        IsVegetarian = recipe.IsVegetarian,
+        //        IsVegan = recipe.IsVegan,
+        //        Ingredients = recipe.RecipeIngredients.Select(ri => new IngredientDto
+        //        {
+        //            Name = ri.Ingredient.Name,
+        //            Quantity = ri.Quantity,
+        //            Unit = ri.Unit
+        //        }).ToList()
+        //    };
 
-            return Results.Created($"/recipes/{recipe.RecipeID}", recipeResponseDto);
-        }
-
-
-        private static async Task<IResult> GetRecipeList(RecipesEFCoreDbContext dbContext, IMapper mapper)
-        {
-            var recipes = await dbContext.Recipes
-                    .Include(r => r.RecipeIngredients)
-                        .ThenInclude(ri => ri.Ingredient)
-                    .ToListAsync();
-
-            var recipeResponseDtos = mapper.Map<List<RecipeResponseDto>>(recipes);
-            return Results.Ok(recipeResponseDtos);
-        }
-
-        private static async Task<IResult> GetRecipeById(RecipesEFCoreDbContext dbContext, IMapper mapper, int id)
-        {
-            var recipes = await dbContext.Recipes
-                .Include(r => r.RecipeIngredients)
-                    .ThenInclude(ri => ri.Ingredient)
-                .FirstOrDefaultAsync(r => r.RecipeID == id);
-
-            if (recipes == null)
-            {
-                return Results.NotFound();
-            }
-
-            var recipeResponseDto = mapper.Map<RecipeResponseDto>(recipes);
-            return Results.Ok(recipeResponseDto);
-        }
-
-        private static async Task<IResult> GetRecipeFilter(RecipesEFCoreDbContext dbContext, IMapper mapper, string query)
-        {
-            var recipes = await dbContext.Recipes
-                .Include(r => r.RecipeIngredients)
-                    .ThenInclude(ri => ri.Ingredient)
-                .Where(r => r.Name.ToLower().Contains(query.ToLower()) || r.RecipeIngredients.Any(ri => ri.Ingredient.Name.ToLower().Contains(query.ToLower())))
-                .ToListAsync();
-
-            var recipeResponseDto = mapper.Map<List<RecipeResponseDto>>(recipes);
-            return Results.Ok(recipeResponseDto);
-        }
+        //    return Results.Created($"/recipes/{recipe.RecipeID}", recipeResponseDto);
+        //}
 
 
-        private static async Task<IResult> UpdateRecipe(RecipesEFCoreDbContext dbContext, IMapper mapper, int id, RecipeDto recipeDto)
-        {
-            // Поиск рецепта в базе данных
-            var recipe = await dbContext.Recipes
-                .Include(r => r.RecipeIngredients)
-                .ThenInclude(ri => ri.Ingredient)
-                .FirstOrDefaultAsync(r => r.RecipeID == id);
+        //private static async Task<IResult> GetRecipeList(RecipesEFCoreDbContext dbContext, IMapper mapper)
+        //{
+        //    var recipes = await dbContext.Recipes
+        //            .Include(r => r.RecipeIngredients)
+        //                .ThenInclude(ri => ri.Ingredient)
+        //            .ToListAsync();
 
-            if (recipe == null)
-            {
-                return Results.NotFound();
-            }
+        //    var recipeResponseDtos = mapper.Map<List<RecipeResponseDto>>(recipes);
+        //    return Results.Ok(recipeResponseDtos);
+        //}
 
-            // Маппинг RecipeDto на существующий Recipe (без ингредиентов)
-            mapper.Map(recipeDto, recipe);
+        //private static async Task<IResult> GetRecipeById(RecipesEFCoreDbContext dbContext, IMapper mapper, int id)
+        //{
+        //    var recipes = await dbContext.Recipes
+        //        .Include(r => r.RecipeIngredients)
+        //            .ThenInclude(ri => ri.Ingredient)
+        //        .FirstOrDefaultAsync(r => r.RecipeID == id);
 
-            // Удаляем старые связи между рецептом и ингредиентами
-            dbContext.RecipeIngredients.RemoveRange(recipe.RecipeIngredients);
+        //    if (recipes == null)
+        //    {
+        //        return Results.NotFound();
+        //    }
 
-            // Добавляем новые связи из DTO
-            foreach (var ingredientDto in recipeDto.Ingredients)
-            {
-                // Проверяем, существует ли ингредиент в базе данных
-                var ingredient = await dbContext.Ingredients
-                    .FirstOrDefaultAsync(i => i.Name == ingredientDto.Name);
+        //    var recipeResponseDto = mapper.Map<RecipeResponseDto>(recipes);
+        //    return Results.Ok(recipeResponseDto);
+        //}
 
-                if (ingredient == null)
-                {
-                    // Если ингредиент не существует, создаём новый
-                    ingredient = new Ingredient { Name = ingredientDto.Name };
-                    dbContext.Ingredients.Add(ingredient);
-                    await dbContext.SaveChangesAsync();
-                }
+        //private static async Task<IResult> GetRecipeFilter(RecipesEFCoreDbContext dbContext, IMapper mapper, string query)
+        //{
+        //    var recipes = await dbContext.Recipes
+        //        .Include(r => r.RecipeIngredients)
+        //            .ThenInclude(ri => ri.Ingredient)
+        //        .Where(r => r.Name.ToLower().Contains(query.ToLower()) || r.RecipeIngredients.Any(ri => ri.Ingredient.Name.ToLower().Contains(query.ToLower())))
+        //        .ToListAsync();
 
-                // Добавляем новую связь в RecipeIngredients
-                recipe.RecipeIngredients.Add(new RecipeIngredient
-                {
-                    IngredientId = ingredient.IngredientId,
-                    Quantity = ingredientDto.Quantity,
-                    Unit = ingredientDto.Unit
-                });
-            }
+        //    var recipeResponseDto = mapper.Map<List<RecipeResponseDto>>(recipes);
+        //    return Results.Ok(recipeResponseDto);
+        //}
 
-            await dbContext.SaveChangesAsync();
 
-            return Results.Ok();
-        }
+        //private static async Task<IResult> UpdateRecipe(RecipesEFCoreDbContext dbContext, IMapper mapper, int id, RecipeDto recipeDto)
+        //{
+        //    // Поиск рецепта в базе данных
+        //    var recipe = await dbContext.Recipes
+        //        .Include(r => r.RecipeIngredients)
+        //        .ThenInclude(ri => ri.Ingredient)
+        //        .FirstOrDefaultAsync(r => r.RecipeID == id);
 
-        private static async Task<IResult> DeleteRecipe(RecipesEFCoreDbContext dbContext, int id)
-        {
-            var recipe = await dbContext.Recipes
-                .Include(r => r.RecipeIngredients)
-                .FirstOrDefaultAsync(r => r.RecipeID == id);
+        //    if (recipe == null)
+        //    {
+        //        return Results.NotFound();
+        //    }
 
-            if (recipe == null)
-            {
-                return Results.NotFound();
-            }
+        //    // Маппинг RecipeDto на существующий Recipe (без ингредиентов)
+        //    mapper.Map(recipeDto, recipe);
 
-            // Удаляем все связи ингредиентов с рецептом
-            dbContext.RecipeIngredients.RemoveRange(recipe.RecipeIngredients);
+        //    // Удаляем старые связи между рецептом и ингредиентами
+        //    dbContext.RecipeIngredients.RemoveRange(recipe.RecipeIngredients);
 
-            // Удаляем сам рецепт
-            dbContext.Recipes.Remove(recipe);
+        //    // Добавляем новые связи из DTO
+        //    foreach (var ingredientDto in recipeDto.Ingredients)
+        //    {
+        //        // Проверяем, существует ли ингредиент в базе данных
+        //        var ingredient = await dbContext.Ingredients
+        //            .FirstOrDefaultAsync(i => i.Name == ingredientDto.Name);
 
-            await dbContext.SaveChangesAsync();
+        //        if (ingredient == null)
+        //        {
+        //            // Если ингредиент не существует, создаём новый
+        //            ingredient = new Ingredient { Name = ingredientDto.Name };
+        //            dbContext.Ingredients.Add(ingredient);
+        //            await dbContext.SaveChangesAsync();
+        //        }
 
-            return Results.Ok();
-        }
+        //        // Добавляем новую связь в RecipeIngredients
+        //        recipe.RecipeIngredients.Add(new RecipeIngredient
+        //        {
+        //            IngredientId = ingredient.IngredientId,
+        //            Quantity = ingredientDto.Quantity,
+        //            Unit = ingredientDto.Unit
+        //        });
+        //    }
+
+        //    await dbContext.SaveChangesAsync();
+
+        //    return Results.Ok();
+        //}
+
+        //private static async Task<IResult> DeleteRecipe(RecipesEFCoreDbContext dbContext, int id)
+        //{
+        //    var recipe = await dbContext.Recipes
+        //        .Include(r => r.RecipeIngredients)
+        //        .FirstOrDefaultAsync(r => r.RecipeID == id);
+
+        //    if (recipe == null)
+        //    {
+        //        return Results.NotFound();
+        //    }
+
+        //    // Удаляем все связи ингредиентов с рецептом
+        //    dbContext.RecipeIngredients.RemoveRange(recipe.RecipeIngredients);
+
+        //    // Удаляем сам рецепт
+        //    dbContext.Recipes.Remove(recipe);
+
+        //    await dbContext.SaveChangesAsync();
+
+        //    return Results.Ok();
+        //}
     }
 }
