@@ -1,8 +1,12 @@
-﻿namespace RecipesEFCore3.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace RecipesEFCore3.Models
 {
     public class Recipe
     {
         public int RecipeID { get; set; }
+
+        [Required]
         public required string Name { get; set; }
         public bool IsVegetarian { get; set; }
         public bool IsVegan { get; set; }

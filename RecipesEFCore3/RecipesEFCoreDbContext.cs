@@ -18,6 +18,11 @@ namespace RecipesEFCore.DataAccess.SQLServer
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Настройка уникального индекса на поле Name
+            modelBuilder.Entity<Recipe>()
+                .HasIndex(r => r.Name)
+                .IsUnique();
+
             modelBuilder.Entity<RecipeIngredient>()
                 .HasKey(ri => new { ri.RecipeID, ri.IngredientId });
 

@@ -32,6 +32,13 @@ public class RecipeService : IRecipeService
             return Results.BadRequest(errors);
         }
 
+        // Проверяем, существует ли рецепт с таким же именем
+        var existingRecipe = await _dbContext.Recipes.FirstOrDefaultAsync(r => r.Name == recipeDto.Name);
+        if (existingRecipe != null)
+        {
+            return Results.Conflict(new { message = "Рецепт с таким именем уже существует." });
+        }
+
         // Маппинг RecipeDto на Recipe (без ингредиентов)
         var recipe = _mapper.Map<Recipe>(recipeDto);
 
