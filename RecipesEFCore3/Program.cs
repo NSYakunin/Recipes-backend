@@ -19,12 +19,23 @@ builder.Services.AddDbContext<RecipesEFCoreDbContext>(options =>
 builder.Services.AddProblemDetails();
 builder.Services.AddScoped<IRecipeService, RecipeService>();
 builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", builder =>
+    {
+        builder.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
 }
 
+app.UseCors("AllowAll");
 app.UseExceptionHandler();
 app.UseSwagger();
 app.UseSwaggerUI();
