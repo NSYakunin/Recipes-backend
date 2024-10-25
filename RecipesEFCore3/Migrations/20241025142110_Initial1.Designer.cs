@@ -11,8 +11,8 @@ using RecipesEFCore.DataAccess.SQLServer;
 namespace RecipesEFCore3.Migrations
 {
     [DbContext(typeof(RecipesEFCoreDbContext))]
-    [Migration("20241021103800_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20241025142110_Initial1")]
+    partial class Initial1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -75,6 +75,9 @@ namespace RecipesEFCore3.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("RecipeID");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("Recipes");
                 });
