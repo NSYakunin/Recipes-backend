@@ -102,27 +102,57 @@ public class RecipeService : IRecipeService
         return Results.Ok(recipeResponseDto);
     }
 
-    public async Task<IResult> GetRecipesAsync()
+    public async Task<IResult> GetRecipesAsync(int? page, int? pageSize)
     {
+        int currentPage = page ?? 1;
+        int currentPageSize = pageSize ?? 50;
+
+        var totalRecipes = await _dbContext.Recipes.CountAsync();
+
         var recipes = await _dbContext.Recipes
             .Include(r => r.RecipeIngredients)
                 .ThenInclude(ri => ri.Ingredient)
+            .Skip((currentPage - 1) * currentPageSize)
+            .Take(currentPageSize)
             .ToListAsync();
 
         var recipeResponseDtos = _mapper.Map<List<RecipeResponseDto>>(recipes);
-        return Results.Ok(recipeResponseDtos);
-    }
 
-    public async Task<IResult> SearchRecipesAsync(string query)
+        var result = new
+        {
+            TotalRecipes = totalRecipes,
+            Recipes = recipeResponseDtos
+        };
+
+        return Results.Ok(result);
+    }
+    public async Task<IResult> SearchRecipesAsync(string query, int? page, int? pageSize)
     {
-        var recipes = await _dbContext.Recipes
+        int currentPage = page ?? 1;
+        int currentPageSize = pageSize ?? 50;
+
+        var recipesQuery = _dbContext.Recipes
             .Include(r => r.RecipeIngredients)
                 .ThenInclude(ri => ri.Ingredient)
-            .Where(r => r.Name.ToLower().Contains(query.ToLower()) || r.RecipeIngredients.Any(ri => ri.Ingredient.Name.ToLower().Contains(query.ToLower())))
+            .Where(r => r.Name.ToLower().Contains(query.ToLower()) ||
+                        r.RecipeIngredients.Any(ri => ri.Ingredient.Name.ToLower().Contains(query.ToLower())));
+
+        var totalRecipes = await recipesQuery.CountAsync();
+
+        var recipes = await recipesQuery
+            .Skip((currentPage - 1) * currentPageSize)
+            .Take(currentPageSize)
             .ToListAsync();
 
         var recipeResponseDto = _mapper.Map<List<RecipeResponseDto>>(recipes);
-        return Results.Ok(recipeResponseDto);
+
+        var result = new
+        {
+            TotalRecipes = totalRecipes,
+            Recipes = recipeResponseDto
+        };
+
+        return Results.Ok(result);
     }
 
     public async Task<IResult> UpdateRecipeAsync(int id, RecipeDto recipeDto)
@@ -136,6 +166,15 @@ public class RecipeService : IRecipeService
         if (recipe == null)
         {
             return Results.NotFound();
+        }
+
+        // Проверяем, существует ли другой рецепт с таким же именем
+        var existingRecipe = await _dbContext.Recipes
+            .FirstOrDefaultAsync(r => r.Name == recipeDto.Name && r.RecipeID != id);
+
+        if (existingRecipe != null)
+        {
+            return Results.Conflict(new { message = "Рецепт с таким именем уже существует." });
         }
 
         // Маппинг RecipeDto на существующий Recipe (без ингредиентов)
