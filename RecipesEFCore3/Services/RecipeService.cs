@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using RecipesEFCore.DataAccess.SQLServer;
 using RecipesEFCore3.Models;
 using RecipesEFCore3.Services;
-using System;
 using System.ComponentModel.DataAnnotations;
 
 public class RecipeService : IRecipeService
@@ -206,7 +205,6 @@ public class RecipeService : IRecipeService
                 Unit = ingredientDto.Unit
             });
         }
-
         await _dbContext.SaveChangesAsync();
 
         return Results.Ok();
@@ -223,7 +221,7 @@ public class RecipeService : IRecipeService
         }
 
         // Удаляем все связи ингредиентов с рецептом
-            _dbContext.RecipeIngredients.RemoveRange(recipe.RecipeIngredients);
+        _dbContext.RecipeIngredients.RemoveRange(recipe.RecipeIngredients);
 
         // Удаляем сам рецепт
         _dbContext.Recipes.Remove(recipe);
