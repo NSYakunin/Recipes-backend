@@ -15,18 +15,23 @@ namespace RecipesEFCore3.Endpoints
     {
         public static void MapRecipeEndpoints(this WebApplication app)
         {
-            app.MapPost("/recipes", async (IRecipeService recipeService, RecipeDto recipeDto) => await recipeService.CreateRecipeAsync(recipeDto));
+            app.MapPost("/recipes", async (IRecipeService recipeService, RecipeDto recipeDto)
+                => await recipeService.CreateRecipeAsync(recipeDto));
 
-            app.MapGet("/recipes", async (IRecipeService recipeService, int? page, int? pageSize) => await recipeService.GetRecipesAsync(page ?? 1, pageSize ?? 50));
+            app.MapGet("/recipes", async (IRecipeService recipeService, int? page, int? pageSize)
+                => await recipeService.GetRecipesAsync(page ?? 1, pageSize ?? 50));
 
-            app.MapGet("/recipes/{id}", async (IRecipeService recipeService, int id) => await recipeService.GetRecipeByIdAsync(id));
+            app.MapGet("/recipes/{id}", async (IRecipeService recipeService, int id)
+                => await recipeService.GetRecipeByIdAsync(id));
 
-            app.MapGet("/recipes/search", async (IRecipeService recipeService, string query, int? page, int? pageSize) =>
-                    await recipeService.SearchRecipesAsync(query, page ?? 1, pageSize ?? 50));
+            app.MapGet("/recipes/search", async (IRecipeService recipeService, string query, int? page, int? pageSize)
+                => await recipeService.SearchRecipesAsync(query, page ?? 1, pageSize ?? 50));
 
-            app.MapPut("/recipes/{id}", async (IRecipeService recipeService, int id, RecipeDto recipeDto) => await recipeService.UpdateRecipeAsync(id, recipeDto));
+            app.MapPut("/recipes/{id}", async (IRecipeService recipeService, int id, RecipeDto recipeDto)
+                => await recipeService.UpdateRecipeAsync(id, recipeDto));
 
-            app.MapDelete("/recipes/{id}", async (IRecipeService recipeService, int id) => await recipeService.DeleteRecipeAsync(id));
+            app.MapDelete("/recipes/{id}", async (IRecipeService recipeService, int id)
+                => await recipeService.DeleteRecipeAsync(id));
 
         }
 
