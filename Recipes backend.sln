@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35222.181
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecipesEFCore3", "RecipesEFCore3\RecipesEFCore3.csproj", "{DB0594A7-D354-46DE-AC05-E65603917B46}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Recipes backend", "RecipesEFCore3\Recipes backend.csproj", "{DB0594A7-D354-46DE-AC05-E65603917B46}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

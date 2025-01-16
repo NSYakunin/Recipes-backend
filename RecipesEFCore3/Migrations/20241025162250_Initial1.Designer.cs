@@ -11,7 +11,7 @@ using RecipesEFCore.DataAccess.SQLServer;
 namespace RecipesEFCore3.Migrations
 {
     [DbContext(typeof(RecipesEFCoreDbContext))]
-    [Migration("20241025142110_Initial1")]
+    [Migration("20241025162250_Initial1")]
     partial class Initial1
     {
         /// <inheritdoc />
